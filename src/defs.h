@@ -64,6 +64,10 @@
 #define LED_CNT 3
 #elif !defined LED_MAP
 #define LED_CNT 0
+#elif LED_MAP == 0xB8
+#define LED_CNT 1
+#define LED1_PORT B
+#define LED1_PIN 8
 #elif LED_MAP == 0xA15B3B4
 #define LED_CNT 3
 #define LED1_PORT A
