@@ -16,7 +16,7 @@ Features
 + Proportional brake, drag brake
 + Temperature/voltage/current protection
 + Variable PWM frequency, active freewheeling
-+ Customizable sounds
++ Customizable startup music
 + Configuration via CLI using a USB-TTL adapter or Betaflight passthrough
 
 
