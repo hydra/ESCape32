@@ -216,6 +216,9 @@
 #ifndef PROT_CURR
 #define PROT_CURR 0
 #endif
+#ifndef MUSIC
+#define MUSIC "dfa#"
+#endif
 #ifndef VOLUME
 #define VOLUME 25
 #endif
