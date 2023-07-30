@@ -18,8 +18,24 @@ add_compile_options(-ffreestanding -ffunction-sections -fdata-sections -fsingle-
 	-Wno-variadic-macros -Wno-unused-result -Wno-unused-parameter -Wno-unused-label)
 add_link_options(-nostartfiles -Wl,--gc-sections)
 
+set(LIBOPENCM3_DIR ${CMAKE_SOURCE_DIR}/libopencm3)
+if (NOT EXISTS ${LIBOPENCM3_DIR}/Makefile)
+	message(FATAL_ERROR "libopencm3 submodule not found. Initialize with 'git submodule update --init' in the source directory")
+endif()
+set(LIBOPENCM3_INC_DIR ${LIBOPENCM3_DIR}/include)
+
+link_directories(${LIBOPENCM3_DIR}/lib)
+include_directories(${LIBOPENCM3_INC_DIR})
+
 function(add_target name mcu)
 	include(mcu/${mcu}/config.cmake)
+	message(NOTICE "Configuring target Name: '${name}', OpenCM3: '${opencm3_lib}'")
+
+	add_custom_command(
+		OUTPUT ${opencm3_lib}
+		COMMAND make TARGETS=${opencm3_target} all
+		WORKING_DIRECTORY ${LIBOPENCM3_DIR})
+
 	file(READ src/main.c main_c)
 	string(REGEX MATCH "REVISION [0-9]+" rev ${main_c})
 	string(REGEX REPLACE "[^0-9]+" "-rev" rev ${rev})
@@ -32,14 +48,15 @@ function(add_target name mcu)
 	target_compile_options(${elf} PRIVATE ${opts})
 	target_compile_definitions(${elf} PRIVATE ${mcu} ${name} ${defs} TARGET_NAME="${name}" ${ARGN})
 	target_link_options(${elf} PRIVATE -T${CMAKE_CURRENT_SOURCE_DIR}/mcu/${mcu}/config.ld -T${CMAKE_CURRENT_SOURCE_DIR}/mcu/common.ld ${opts})
-	target_link_libraries(${elf} c_nano gcc nosys ${libs})
+	target_link_libraries(${elf} c_nano gcc nosys ${opencm3_lib})
 	add_custom_command(
 		OUTPUT ${bin} ${hex}
 		COMMAND ${OBJCOPY} -O binary ${elf} ${bin}
 		COMMAND ${OBJCOPY} -O ihex ${elf} ${hex}
 		DEPENDS ${elf}
 	)
-	add_custom_target(${name} ALL DEPENDS ${hex})
+
+	add_custom_target(${name} ALL DEPENDS ${opencm3_lib} ${hex})
 	add_custom_target(flash-${name} COMMAND ${FLASH} --reset --connect-under-reset --format ihex write ${hex} DEPENDS ${hex})
 endfunction()
 
